@@ -24,6 +24,22 @@ jobs:
           sudo mount --bind \
             "$RUNS_ON_STICKYDISK_DIR/omarchy" \
             "$HOME/.cache/omarchy"
+      - name: Inspect restored Omarchy cache
+        run: |
+          echo "Sticky mount:"
+          findmnt -T "$HOME/.cache/omarchy"
+      
+          echo "Restored size:"
+          du -sh "$RUNS_ON_STICKYDISK_DIR/omarchy"
+      
+          echo "Cached package count:"
+          find \
+            "$HOME/.cache/omarchy/iso_stable/airootfs/var/cache/omarchy/mirror/offline" \
+            -type f -name '*.pkg.tar.zst' 2>/dev/null |
+            wc -l
+
+          echo "Sticky-disk timings:"
+          cat "$RUNS_ON_STICKYDISK_TIMINGS_FILE"
 
       - name: Build ISO
         run: NO_BOOT_OFFER=1 ./bin/omarchy-iso-make
