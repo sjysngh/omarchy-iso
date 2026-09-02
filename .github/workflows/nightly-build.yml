@@ -7,16 +7,13 @@ on:
 
 jobs:
   build-iso:
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}/family=m8azn/cpu=4/ram=16/image=ubuntu24-full-x64/volume=50gb/env=demo
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Free Disk Space
-        uses: jlumbroso/free-disk-space@v1.3.1
 
       - name: Build ISO
         run: NO_BOOT_OFFER=1 ./bin/omarchy-iso-make
@@ -33,3 +30,4 @@ jobs:
           name: omarchy-iso-${{ github.run_number }}
           path: ./release/*.iso
           retention-days: 1
+          compression: 0
