@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-iso:
-    runs-on: runs-on=${{ github.run_id }}/family=m8azn/cpu=4/ram=16/image=ubuntu24-full-x64/volume=50gb/env=demo
+    runs-on: runs-on=${{ github.run_id }}/family=m8azn/cpu=2/ram=8/image=ubuntu24-full-x64/volume=50gb/env=demo
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
