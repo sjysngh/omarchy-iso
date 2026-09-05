@@ -1,0 +1,88 @@
+name: Benchmark ISO Build Runners
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_runs_on:
+        description: Run all four RunsOn configurations (disable in the private mirror)
+        required: true
+        default: true
+        type: boolean
+      runs_on_volume:
+        description: Root volume for RunsOn runners
+        required: true
+        default: 50gb
+        type: choice
+        options:
+          - 30gb
+          - 50gb
+          - 80gb
+
+permissions:
+  contents: read
+
+jobs:
+  runs-on:
+    if: ${{ inputs.run_runs_on }}
+    name: RunsOn ${{ matrix.family }} (${{ matrix.market }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: large-spot
+            family: m8azn.large
+            market: spot
+            spot: true
+          - id: xlarge-spot
+            family: m8azn.xlarge
+            market: spot
+            spot: true
+          - id: large-on-demand
+            family: m8azn.large
+            market: on-demand
+            spot: false
+          - id: xlarge-on-demand
+            family: m8azn.xlarge
+            market: on-demand
+            spot: false
+
+    runs-on: runs-on=${{ github.run_id }}-${{ matrix.id }}/family=${{ matrix.family }}/image=ubuntu24-full-x64/volume=${{ inputs.runs_on_volume }}/spot=${{ matrix.spot }}/env=demo
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build ISO
+        run: NO_BOOT_OFFER=1 ./bin/omarchy-iso-make
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omarchy-iso-${{ matrix.id }}-${{ github.run_number }}
+          path: ./release/*.iso
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+  github-hosted:
+    name: GitHub-hosted (${{ github.event.repository.private && 'private' || 'public' }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@v1.3.1
+
+      - name: Build ISO
+        run: NO_BOOT_OFFER=1 ./bin/omarchy-iso-make
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omarchy-iso-github-hosted-${{ github.run_number }}
+          path: ./release/*.iso
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
